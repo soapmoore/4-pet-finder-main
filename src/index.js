@@ -1,36 +1,77 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
-import { Pet } from "./Pet";
+import Modal from "react-modal";
+import { listPets, createPet } from "./api";
+import Pet from "./Pet";
+
+import NewPetModal from "./NewPetModal";
+
 import "./index.css";
 
 const App = () => {
   const [pets, setPets] = useState([]);
+  const [isLoading, setLoading] = useState([]);
+  const [isNewPetOpen, setNewPetOpen] = useState(false);
 
   useEffect(() => {
-    // fetch("http://localhost:3001/pets")
-    //   .then((res) => res.json())
-    //   .then((pets) => setPets(pets));
-    async function getData() {
-      const res = await fetch("http://localhost:3001/pets");
-      const pets = await res.json();
-      setPets(pets);
-    }
-    getData();
+    setLoading(true);
+    listPets()
+      .then((pets) => setPets(pets))
+      .finally(() => setLoading(false));
   }, []);
+
+  // const addPet = async ({ name, kind, photo }) => {
+  //   setPets([
+  //     ...pets,
+  //     {
+  //       id: Math.random(),
+  //       name,
+  //       kind,
+  //       photo,
+  //     },
+  //   ]);
+  //   setNewPetOpen(false);
+  // };
+
+  const addPet = async (pet) => {
+    return createPet(pet).then((newPet) => {
+      setPets([...pets, newPet]);
+      setNewPetOpen(false);
+    });
+  };
+
   return (
     <main>
       <h1>Adopt-a-Pet</h1>
-      <ul>
-        {pets.map((pet) => (
-          <li key={pet.id}>
-            <Pet pet={pet} />
-          </li>
-        ))}
-      </ul>
-      <button>Add a Pet</button>
+
+      {isLoading ? (
+        <div className="loading">Loading...</div>
+      ) : (
+        <>
+          <ul>
+            {pets.map((pet) => (
+              <li key={pet.id}>
+                <Pet pet={pet} />
+              </li>
+            ))}
+          </ul>
+          <button onClick={() => setNewPetOpen(true)}>Add a Pet</button>
+        </>
+      )}
+
+      {isNewPetOpen && (
+        <NewPetModal
+          // isOpen={isNewPetOpen}
+          onSave={addPet}
+          onCancel={() => setNewPetOpen(false)}
+        />
+      )}
     </main>
   );
 };
+const el = document.querySelector("#root");
+Modal.setAppElement(el);
+ReactDOM.render(<App />, el);
 
-ReactDOM.render(<App />, document.querySelector("#root"));
+// ReactDOM.render(<App />, document.querySelector("#root"));

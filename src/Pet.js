@@ -1,12 +1,25 @@
 import React from "react";
 
-export const Pet = ({ pet }) => {
+const Pet = ({ pet, onEdit, onRemove }) => {
   return (
-    <div>
-      <h2>
-        <pre>{JSON.stringify(pet, null, 2)}</pre>
-      </h2>
-      <h2>{pet.name}</h2>
+    <div className="pet">
+      {pet.photo ? (
+        <img src={pet.photo} alt="" className="pet-photo sm" />
+      ) : (
+        <div className="no-photo">?</div>
+      )}
+      <button className="pet-name" onClick={onEdit}>
+        {pet.name}
+      </button>
+      <div className="pet-kind">{pet.kind}</div>
+
+      <button className="adopt-btn" onClick={onRemove}>
+        <span role="img" aria-label="adopt this pet">
+          🏠
+        </span>
+      </button>
     </div>
   );
 };
+
+export default Pet;
