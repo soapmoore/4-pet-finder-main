@@ -2,10 +2,11 @@ import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
 import Modal from "react-modal";
-import { listPets, createPet } from "./api";
+import { listPets, createPet, updatePet, deletePet } from "./api";
 import Pet from "./Pet";
 
 import NewPetModal from "./NewPetModal";
+import EditPetModal from "./EditPetModal";
 
 import "./index.css";
 
@@ -13,6 +14,7 @@ const App = () => {
   const [pets, setPets] = useState([]);
   const [isLoading, setLoading] = useState([]);
   const [isNewPetOpen, setNewPetOpen] = useState(false);
+  const [currentPet, setCurrentPet] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -21,24 +23,31 @@ const App = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // const addPet = async ({ name, kind, photo }) => {
-  //   setPets([
-  //     ...pets,
-  //     {
-  //       id: Math.random(),
-  //       name,
-  //       kind,
-  //       photo,
-  //     },
-  //   ]);
-  //   setNewPetOpen(false);
-  // };
-
   const addPet = async (pet) => {
     return createPet(pet).then((newPet) => {
       setPets([...pets, newPet]);
       setNewPetOpen(false);
     });
+  };
+
+  const savePet = async (pet) => {
+    return updatePet(pet).then((updatedPet) => {
+      setPets((pets) =>
+        pets.map((pet) => (pet.id === updatedPet.id ? updatedPet : pet))
+      );
+      setCurrentPet(null);
+    });
+  };
+
+  const removePet = (byePet) => {
+    const result = window.confirm(
+      `Are you sure you want to adopt ${byePet.name}`
+    );
+    if (result) {
+      deletePet(byePet).then(() => {
+        setPets((pets) => pets.filter((pet) => pet.id !== byePet.id));
+      });
+    }
   };
 
   return (
@@ -52,7 +61,11 @@ const App = () => {
           <ul>
             {pets.map((pet) => (
               <li key={pet.id}>
-                <Pet pet={pet} />
+                <Pet
+                  pet={pet}
+                  onEdit={() => setCurrentPet(pet)}
+                  onRemove={() => removePet(pet)}
+                />
               </li>
             ))}
           </ul>
@@ -65,6 +78,13 @@ const App = () => {
           // isOpen={isNewPetOpen}
           onSave={addPet}
           onCancel={() => setNewPetOpen(false)}
+        />
+      )}
+      {currentPet && (
+        <EditPetModal
+          pet={currentPet}
+          onCancel={() => setCurrentPet(null)}
+          onSave={savePet}
         />
       )}
     </main>
